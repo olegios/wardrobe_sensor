@@ -11,12 +11,13 @@
 #define ATOMIC_FS_UPDATE
 
 
+void serial_init();
 void wifi_init();
 void ota_init();
 
 
 void setup() {
-  Serial.begin(115200);
+  serial_init();
   wifi_init();
   ota_init();
 }
@@ -24,6 +25,12 @@ void setup() {
 
 void loop() {
   ArduinoOTA.handle();
+}
+
+
+void serial_init() {
+  Serial.begin(115200);
+  Serial.setTimeout(2000);
 }
 
 
