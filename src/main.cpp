@@ -44,6 +44,8 @@ void wifi_init() {
   Serial.println("WiFi connected");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+  Serial.print("RRSI: ");
+  Serial.println(WiFi.RSSI());
 }
 
 void ota_init() {
