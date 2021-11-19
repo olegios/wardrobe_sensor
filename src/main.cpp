@@ -10,21 +10,38 @@
 
 #define ATOMIC_FS_UPDATE
 
+// Set GPIOs for OUT_RELAY and PIR Motion Sensor
+#define PIR_SENSOR 0
+#define OUT_RELAY  2
+
+#define DELAY_SECONDS 10
+
+// Timer: Auxiliary variables
+unsigned long current_time = millis();
+unsigned long last_trigger = 0;
+boolean start_timer = false;
+
 
 void serial_init();
 void wifi_init();
 void ota_init();
+void gpio_init();
+
+void IRAM_ATTR detects_movement();
+void check_movement();
 
 
 void setup() {
   serial_init();
   wifi_init();
   ota_init();
+  gpio_init();
 }
 
 
 void loop() {
   ArduinoOTA.handle();
+  check_movement();
 }
 
 
@@ -54,6 +71,7 @@ void wifi_init() {
   Serial.print("RRSI: ");
   Serial.println(WiFi.RSSI());
 }
+
 
 void ota_init() {
   // Port defaults to 8266
@@ -103,4 +121,36 @@ void ota_init() {
 
   ArduinoOTA.begin();
   Serial.printf("OTA Ready, free space available: %.f bytes\n",(float)ESP.getFreeSketchSpace());
+}
+
+
+void gpio_init() {
+  // PIR Motion Sensor mode INPUT_PULLUP
+  pinMode(PIR_SENSOR, INPUT_PULLUP);
+  // Set motionSensor pin as interrupt, assign interrupt function and set RISING mode
+  attachInterrupt(digitalPinToInterrupt(PIR_SENSOR), detects_movement, RISING);
+
+  // Set OUT_RELAY to LOW
+  pinMode(OUT_RELAY, OUTPUT);
+  digitalWrite(OUT_RELAY, LOW);
+}
+
+
+void IRAM_ATTR detects_movement() {
+  // Checks if motion was detected, sets OUT_RELAY HIGH and starts a timer
+  Serial.println("MOTION DETECTED!!!");
+  digitalWrite(OUT_RELAY, HIGH);
+  start_timer = true;
+  last_trigger = millis();
+}
+
+
+void check_movement() {
+  current_time = millis();
+  // Turn off the OUT_RELAY after the number of seconds defined in the timeSeconds variable
+  if(start_timer && (current_time - last_trigger > (DELAY_SECONDS * 1000))) {
+    Serial.println("Motion stopped...");
+    digitalWrite(OUT_RELAY, LOW);
+    start_timer = false;
+  }
 }
