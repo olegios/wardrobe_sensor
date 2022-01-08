@@ -167,7 +167,7 @@ void telegram_client_init() {
   configTime(0, 0, "pool.ntp.org");  // get UTC time via NTP
   secured_telegram_client.setTrustAnchors(&cert);     // Add root certificate for api.telegram.org
   Serial.println("Telegram client is ready.");
-  bot.sendMessage(CHAT_ID, "Wardrobe bot started up", "");
+  bot.sendMessage(CHAT_ID, "Wardrobe bot started up", "", 0, alarm_mode);
 
   const String commands = F("["
     "{\"command\":\"on\", \"description\":\"Light on\"},"
@@ -220,7 +220,7 @@ void bot_message_handler(int numNewMessages) {
     // Chat id of the requester
     String chat_id = String(bot.messages[i].chat_id);
     if (chat_id != CHAT_ID){
-      bot.sendMessage(chat_id, "Unauthorized user.", "");
+      bot.sendMessage(chat_id, "Unauthorized user.", "", 0, alarm_mode);
       continue;
     }
 
@@ -238,38 +238,38 @@ void bot_message_handler(int numNewMessages) {
         "light: " + light_stat + "\n" +
         "delay: " + String(out_relay_delay_s) + " sec"
       );
-      bot.sendMessage(chat_id, msg, "");
+      bot.sendMessage(chat_id, msg, "", 0, alarm_mode);
     }
 
     if (text == "/up") {
       out_relay_delay_s += 10;
-      bot.sendMessage(chat_id, "set delay to " + String(out_relay_delay_s) + " sec.", "");
+      bot.sendMessage(chat_id, "set delay to " + String(out_relay_delay_s) + " sec.", "", 0, alarm_mode);
     }
 
     if (text == "/down") {
       out_relay_delay_s -= 10;
-      bot.sendMessage(chat_id, "set delay to " + String(out_relay_delay_s) + " sec.", "");
+      bot.sendMessage(chat_id, "set delay to " + String(out_relay_delay_s) + " sec.", "", 0, alarm_mode);
     }
 
     if (text == "/alarm") {
       if (alarm_mode) {
         alarm_mode = false;
-        bot.sendMessage(chat_id, "alarm OFF", "");
+        bot.sendMessage(chat_id, "alarm OFF", "", 0, alarm_mode);
       } else {
         alarm_mode = true;
-        bot.sendMessage(chat_id, "alarm ON", "");
+        bot.sendMessage(chat_id, "alarm ON", "", 0, alarm_mode);
       }
     }
 
     if (text == "/off") {
         is_active = false;
-        bot.sendMessage(chat_id, "Wardrobe light OFF", "");
+        bot.sendMessage(chat_id, "Wardrobe light OFF", "", 0, alarm_mode);
         digitalWrite(OUT_RELAY, LOW);
     }
 
     if (text == "/on") {
         is_active = true;
-        bot.sendMessage(chat_id, "Wardrobe light ON", "");
+        bot.sendMessage(chat_id, "Wardrobe light ON", "", 0, alarm_mode);
     }
 
   }
