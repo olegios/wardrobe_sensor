@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <ESP8266WiFi.h>
 // #include <ArduinoOTA.h>
 #include <UniversalTelegramBot.h> //https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot
@@ -12,6 +13,11 @@
 
 // #define ATOMIC_FS_UPDATE
 
+// This is the number of bytes of flash memory for settings stores
+#define EEPROM_SIZE 2
+
+#define EEPROM_ADDR_ALARM 0
+#define EEPROM_ADDR_DELAY 1
 
 
 // Set GPIOs for OUT_RELAY and PIR Motion Sensor
@@ -29,8 +35,6 @@ int botRequestDelay = 5000;
 unsigned long lastTimeBotRan;
 
 
-
-
 // Timer: Auxiliary variables
 unsigned long current_time = millis();
 unsigned long last_trigger = 0;
@@ -43,6 +47,7 @@ boolean motion_detected = false;
 
 
 void serial_init();
+void settings_init();
 void wifi_init();
 // void ota_init();
 void gpio_init();
@@ -57,6 +62,7 @@ void bot_message_handler(int numNewMessages);
 
 void setup() {
   serial_init();
+  settings_init();
   wifi_init();
   telegram_client_init();
   // ota_init();
@@ -75,6 +81,12 @@ void loop() {
 void serial_init() {
   Serial.begin(115200);
   Serial.setTimeout(2000);
+}
+
+void settings_init() {
+  EEPROM.begin(EEPROM_SIZE);
+  alarm_mode = EEPROM.read(EEPROM_ADDR_ALARM);
+  out_relay_delay_s =  EEPROM.read(EEPROM_ADDR_DELAY);
 }
 
 
@@ -97,6 +109,9 @@ void wifi_init() {
   Serial.println(WiFi.localIP());
   Serial.print("RSSI: ");
   Serial.println(WiFi.RSSI());
+
+  Serial.print("Delay: ");
+  Serial.println(out_relay_delay_s);
 }
 
 
@@ -244,21 +259,27 @@ void bot_message_handler(int numNewMessages) {
     if (text == "/up") {
       out_relay_delay_s += 10;
       bot.sendMessage(chat_id, "set delay to " + String(out_relay_delay_s) + " sec.", "", 0, alarm_mode);
+      EEPROM.write(EEPROM_ADDR_DELAY, out_relay_delay_s);
+      EEPROM.commit();
     }
 
     if (text == "/down") {
       out_relay_delay_s -= 10;
       bot.sendMessage(chat_id, "set delay to " + String(out_relay_delay_s) + " sec.", "", 0, alarm_mode);
+      EEPROM.write(EEPROM_ADDR_DELAY, out_relay_delay_s);
+      EEPROM.commit();
     }
 
     if (text == "/alarm") {
       if (alarm_mode) {
         alarm_mode = false;
-        bot.sendMessage(chat_id, "alarm OFF", "", 0, alarm_mode);
+        bot.sendMessage(chat_id, "alarm OFF", "");
       } else {
         alarm_mode = true;
-        bot.sendMessage(chat_id, "alarm ON", "", 0, alarm_mode);
+        bot.sendMessage(chat_id, "alarm ON", "");
       }
+      EEPROM.write(EEPROM_ADDR_ALARM, alarm_mode);
+      EEPROM.commit();
     }
 
     if (text == "/off") {
