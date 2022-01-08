@@ -170,12 +170,12 @@ void telegram_client_init() {
   bot.sendMessage(CHAT_ID, "Wardrobe bot started up", "");
 
   const String commands = F("["
-    "{\"command\":\"stat\", \"description\":\"Device current status\"},"
-    "{\"command\":\"alarm\", \"description\":\"Send motion detection message\"},"
-    "{\"command\":\"up\", \"description\":\"Increase 10 sec light delay\"},"
-    "{\"command\":\"down\", \"description\":\"Decrease 10 sec light delay\"},"
     "{\"command\":\"on\", \"description\":\"Light on\"},"
-    "{\"command\":\"off\",\"description\":\"Light off\"}" // no comma on last command
+    "{\"command\":\"off\",\"description\":\"Light off\"},"
+    "{\"command\":\"alarm\", \"description\":\"Send motion detection message\"},"
+    "{\"command\":\"status\", \"description\":\"Device current status\"},"
+    "{\"command\":\"up\", \"description\":\"Increase 10 sec light delay\"},"
+    "{\"command\":\"down\", \"description\":\"Decrease 10 sec light delay\"}"  // no comma on last command
     "]");
   bot.setMyCommands(commands);
 }
@@ -230,7 +230,7 @@ void bot_message_handler(int numNewMessages) {
     Serial.print(": ");
     Serial.println(text);
 
-    if (text == "/stat") {
+    if (text == "/status") {
       String alarm_stat = alarm_mode ? "on" : "off";
       String light_stat = is_active ? "on" : "off";
       String msg = (
